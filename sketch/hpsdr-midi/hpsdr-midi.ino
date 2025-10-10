@@ -16,7 +16,7 @@
 midiEventPacket_t input_message;
 
 #define DEBOUNCE 50 // ms
-#define UPDATE 100 // ms
+#define UPDATE 10 // ms was 100
 unsigned long update_millis=0;
 unsigned long t;
 
@@ -32,7 +32,7 @@ ENCODER encoders[MAX_ENCODERS] = {
   {3, 4, 2, 0, true, false, 0x01, 0x01, 0, NULL},
   {15, 14, 16, 0, true, false, 0x01, 0x01, 0, NULL},
   {18, 17, 19, 0, true, false, 0x01, 0x01, 0, NULL},
-  {21, 20, 22, 0, true, false, 0x01, 0x01, 0, NULL}
+  {21, 20, 22, 0, true, false, 0x01, 0x01, 0, NULL} // VFO
 };
 
 int encoder=0;
@@ -271,10 +271,16 @@ void loop() {
 #endif
     digitalWrite(LED, shifted);
   }
-  
-  //encoders[encoder].re->tick();
-  unsigned char dir=encoders[encoder].re->process();
-  /*pollSwitch(true,encoder);*/
+
+  // always check the VFO - incase it is a high res encoder
+  unsigned char dir=encoders[6].re->process();
+  if(dir==DIR_CW) {
+    encoders[6].value++;
+  } else if(dir==DIR_CCW) {
+    encoders[6].value--;
+  }
+
+  dir=encoders[encoder].re->process();
   if(dir==DIR_CW) {
     encoders[encoder].value++;
   } else if(dir==DIR_CCW) {
@@ -282,7 +288,7 @@ void loop() {
   }
   pollSwitch(true,encoder);
   encoder++;
-  if(encoder==MAX_ENCODERS) encoder=0;
+  if(encoder==MAX_ENCODERS-1) encoder=0;
   
   pollSwitch(false,sw);
   sw++;
